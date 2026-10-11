@@ -17,3 +17,33 @@ LABEL org.opencontainers.image.title="pcom-ds-superset" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.created="${BUILD_DATE}"
+
+USER root
+
+ENV UV_CACHE_DIR=/tmp/uv-cache
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config \
+    build-essential \
+    default-libmysqlclient-dev \
+    && apt-get clean
+
+RUN mkdir -p /tmp/uv-cache && \
+    chown -R superset:superset /tmp/uv-cache /app/.venv
+
+USER superset
+
+RUN . /app/.venv/bin/activate && \
+    uv pip install \
+        psycopg2-binary \
+        pymssql \
+        Authlib \
+        openpyxl \
+        Pillow \
+        pyhive \
+        prophet \
+        clickhouse-connect \
+        mysqlclient \
+        starrocks
+
+CMD ["/app/docker/entrypoints/run-server.sh"]
